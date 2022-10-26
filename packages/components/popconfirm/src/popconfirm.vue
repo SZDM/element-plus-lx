@@ -1,0 +1,114 @@
+<template>
+  <el-tooltip
+    ref="tooltipRef"
+    :trigger="trigger"
+    effect="light"
+    :popper-class="
+      $slots.content
+        ? `${popperClass ? popperClass : ''}`
+        : `${ns.namespace.value}-popover ${popperClass ? popperClass : ''}`
+    "
+    :teleported="teleported"
+    :placement="placement"
+    :fallback-placements="['bottom', 'top', 'right', 'left']"
+    :hide-after="hideAfter"
+    :persistent="persistent"
+    :on-after-leave-callback="onAfterLeaveCallback"
+    :z-index="zIndex"
+  >
+    <template #content>
+      <slot name="content">
+        <div :class="ns.b()">
+          <div :class="ns.e('main')">
+            <el-icon
+              v-if="!hideIcon && icon"
+              :class="ns.e('icon')"
+              :style="{ color: iconColor }"
+            >
+              <component :is="icon" />
+            </el-icon>
+            {{ title }}
+          </div>
+          <div :class="ns.e('action')">
+            <el-button
+              size="small"
+              :type="cancelButtonType === 'text' ? '' : cancelButtonType"
+              :text="cancelButtonType === 'text'"
+              @click="cancel"
+            >
+              {{ finalCancelButtonText }}
+            </el-button>
+            <el-button
+              size="small"
+              :type="confirmButtonType === 'text' ? '' : confirmButtonType"
+              :text="confirmButtonType === 'text'"
+              @click="confirm"
+            >
+              {{ finalConfirmButtonText }}
+            </el-button>
+          </div>
+        </div>
+      </slot>
+    </template>
+    <template v-if="$slots.reference">
+      <slot name="reference" />
+    </template>
+  </el-tooltip>
+</template>
+
+<script lang="ts" setup>
+import { computed, inject, onMounted, ref, watch } from 'vue'
+import ElButton from '@element-plus/components/button'
+import ElIcon from '@element-plus/components/icon'
+import ElTooltip from '@element-plus/components/tooltip'
+import { useLocale, useNamespace } from '@element-plus/hooks'
+import { DROPDOWN_INJECTION_KEY } from '../../dropdown/src/tokens'
+import { popconfirmProps } from './popconfirm'
+
+import type { TooltipInstance } from '@element-plus/components/tooltip'
+
+defineOptions({
+  name: 'ElPopconfirm',
+})
+
+const props = defineProps(popconfirmProps)
+
+onMounted(() => {
+  const dropdownInjection = inject(DROPDOWN_INJECTION_KEY, undefined)
+  watch(
+    () => tooltipRef.value.popperContentRef,
+    (value) => {
+      dropdownInjection?.updatePopconfirmPopperContentRef(value)
+    }
+  )
+})
+
+const { t } = useLocale()
+const ns = useNamespace('popconfirm')
+const tooltipRef = ref<TooltipInstance>()
+
+const hidePopper = () => {
+  tooltipRef.value?.onClose?.()
+}
+
+const confirm = (e: Event) => {
+  props.onConfirm?.(e)
+  hidePopper()
+}
+const cancel = (e: Event) => {
+  props.onCancel?.(e)
+  hidePopper()
+}
+
+const finalConfirmButtonText = computed(
+  () => props.confirmButtonText || t('el.popconfirm.confirmButtonText')
+)
+const finalCancelButtonText = computed(
+  () => props.cancelButtonText || t('el.popconfirm.cancelButtonText')
+)
+
+defineExpose({
+  tooltipRef,
+  hidePopper,
+})
+</script>

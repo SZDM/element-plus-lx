@@ -1,0 +1,27 @@
+@use 'mixins/mixins' as *;
+@use 'common/var' as *;
+
+@include b(overlay) {
+  #{& + '-root'} {
+    height: 0;
+  }
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2000;
+  height: 100%;
+  background-color: getCssVar('overlay-color', 'lighter');
+  overflow: auto;
+  &.user-select-none {
+    user-select: none;
+  }
+  .col-resize {
+    position: absolute;
+    height: 100%;
+    width: 30px;
+    cursor: col-resize;
+    z-index: 1;
+  }
+}
